@@ -35,20 +35,6 @@ internalSocket socket =
 
 
 
--- INSPECT
-
-
-isOpening : InternalSocket msg -> Bool
-isOpening internalSocket =
-    case internalSocket.connection of
-        Opening _ _ ->
-            True
-
-        _ ->
-            False
-
-
-
 -- MODIFY
 
 
@@ -185,11 +171,6 @@ close { connection } =
 get : Endpoint -> Dict Endpoint (InternalSocket msg) -> Maybe (InternalSocket msg)
 get endpoint dict =
     Dict.get endpoint dict
-
-
-getRef : Endpoint -> Dict Endpoint (InternalSocket msg) -> Maybe Ref
-getRef endpoint dict =
-    get endpoint dict |> Maybe.andThen ref
 
 
 ref : InternalSocket msg -> Maybe Ref

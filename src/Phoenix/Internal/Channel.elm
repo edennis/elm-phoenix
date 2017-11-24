@@ -71,13 +71,7 @@ get endpoint topic channelsDict =
     Helpers.getIn endpoint topic channelsDict
 
 
-getState : Endpoint -> Topic -> InternalChannelsDict msg -> Maybe State
-getState endpoint topic channelsDict =
-    get endpoint topic channelsDict
-        |> Maybe.map (\{ state } -> state)
-
-
-{-|  Inserts the state, identity if channel for given endpoint topic doesn_t exist
+{-| Inserts the state, identity if channel for given endpoint topic doesn_t exist
 -}
 insertState : Endpoint -> Topic -> State -> InternalChannelsDict msg -> InternalChannelsDict msg
 insertState endpoint topic state dict =
