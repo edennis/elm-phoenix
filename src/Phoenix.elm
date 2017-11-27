@@ -244,7 +244,7 @@ buildChannelsDict subs dict =
         (Connect { endpoint } channels) :: rest ->
             let
                 internalChan chan =
-                    (InternalChannel InternalChannel.Closed Dict.empty chan)
+                    (InternalChannel InternalChannel.Closed InternalChannel.Closed Dict.empty chan)
 
                 build chan dict_ =
                     buildChannelsDict rest (Helpers.insertIn endpoint chan.topic (internalChan chan) dict_)
@@ -548,8 +548,7 @@ onSelfMsg router selfMsg state =
                 <&> handlePhoenixMessage router endpoint message
 
         ChannelJoinReply endpoint topic oldState message ->
-            (handleChannelJoinReply router endpoint topic message oldState state.channels)
-                |> Task.map (\newChannels -> updateChannels newChannels state)
+            Task.succeed state
 
         JoinChannel endpoint internalChannel ->
             case Dict.get endpoint state.sockets of
@@ -786,6 +785,15 @@ handlePhoenixMessage router endpoint message state =
                     in
                         sendToApp &> sendJoinHelper endpoint [ newChannel ] state
 
+        "phx_reply" ->
+            case Helpers.getIn endpoint message.topic state.channels of
+                Nothing ->
+                    Task.succeed state
+
+                Just internalChannel ->
+                    (handleChannelJoinReply router endpoint message.topic message internalChannel.prevState state.channels)
+                        |> Task.map (\newChannels -> updateChannels newChannels state)
+
         -- TODO do we have to do something here?
         "phx_close" ->
             Task.succeed state
@@ -958,7 +966,7 @@ sendJoinHelper endpoint channels state =
 -- PUSH MESSAGES
 
 
-{-| pushes a message to a certain socket. Ignores if the sending failes.
+{-| pushes a message to a certain socket. Ignores if the sending fails.
 -}
 pushSocket_ : Endpoint -> Message -> Maybe (SelfCallback msg) -> State msg -> Task x (State msg)
 pushSocket_ endpoint message maybeSelfCb state =
